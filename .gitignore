@@ -17,4 +17,8 @@ tmp
 _yardoc
 doc/
 
+<<<<<<< HEAD
 *.pro.user
+=======
+linux
+>>>>>>> ignore linux images directory
