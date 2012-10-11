@@ -20,6 +20,7 @@ tracks.each_with_index do |track, index|
   puts "#{index}. #{track}#{ index == 0 ? ' (default)' : ''}"
 end
 
+puts "Enter your destiny: "
 selected_index = gets
 selected_index = '0' if selected_index.chomp == ""
 selected_track = tracks[selected_index.chomp.to_i]
