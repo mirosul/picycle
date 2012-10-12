@@ -89,6 +89,7 @@ interval = 2 # in meters
 smooth_track = [["Total distance", "Latitude", "Longitude", "Elevation", "Slope", "Heading", "SVURL"]]
 old_latitude = 0
 old_longitude = 0
+old_elevation = 0
 
 puts "total distance = #{total_distance.floor}m"
 puts "checkpoints = #{total_distance.floor/interval} points"
@@ -111,14 +112,16 @@ puts "smoothing gps track (1 dot = #{500*interval}m)"
 
   bearing_degrees = bearing_radians * 180.000000 / Math::PI
 
-  slope = 0
+  slope = (int_elevation - old_elevation) / interval
+  slope_angle = Math.atan(slope)
 
   svurl = "http://maps.googleapis.com/maps/api/streetview?size=640x640&location=#{int_latitude},#{int_longitude}&heading=#{bearing_degrees}&fov=120&pitch=0&sensor=false&key=AIzaSyAEL0_1Syy9c1ycUH5xNNK2QRt3DbZT5g8"
 
-  smooth_track << [index*2, int_latitude, int_longitude, int_elevation, slope, bearing_degrees.floor, svurl]
+  smooth_track << [index*2, int_latitude, int_longitude, int_elevation, slope_angle, bearing_degrees.floor, svurl]
 
   old_latitude = int_latitude
   old_longitude = int_longitude
+  old_elevation = int_elevation
 
   putc '.' if index % 500 == 0
 end
@@ -133,16 +136,11 @@ CSV.open(output_csv_file, "wb") do |csv|
   end
 end
 
-# TODO: calculate slope
-# http://maps.googleapis.com/maps/api/streetview?size=640x640&location=56.960654,-2.201815&heading=250&fov=120&pitch=0&sensor=false&key=AIzaSyAEL0_1Syy9c1ycUH5xNNK2QRt3DbZT5g8
-
-# tc1=mod(atan2(sin(lon2-lon1)*cos(lat2),cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(lon2-lon1)),2*pi)
-
-# atan2(sin(lon2-lon1)*cos(lat2),cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(lon2-lon1)) / (2*pi)
+# TODO: calculate slope with more checkpoints
 
 puts "there you go sir!"
 
-# test points
+# test points for heading calculation
 # 1 46.362093,22.873535
 # 2 48.04871,27.268066
 # 3 44.166445,21.09375
