@@ -85,12 +85,42 @@ longitude_table = Interpolator::Table.new(distance_longitude)
 longitude_table.style = 5 # 1=linear, 2=lagrange, 3=lagrange3, 4=cubic, 5=spline
 
 # output the new array (Td, elevation, slope)
-puts "smoothing gps track (1 dot = 1km)"
-smooth_track = [["Total distance", "Latitude", "Longitude", "Elevation"]]
-(0..total_distance/2).each do |index|
-  smooth_track << [index*2, latitude_table.interpolate(index*2),
-      longitude_table.interpolate(index*2), elevation_table.interpolate(index*2)]
-  putc '.' if index%500 == 0
+interval = 2 # in meters
+smooth_track = [["Total distance", "Latitude", "Longitude", "Elevation", "Slope", "Heading", "SVURL"]]
+old_latitude = 0
+old_longitude = 0
+
+puts "total distance = #{total_distance.floor}m"
+puts "checkpoints = #{total_distance.floor/interval} points"
+puts "smoothing gps track (1 dot = #{500*interval}m)"
+
+(0..total_distance/interval).each do |index|
+  int_latitude = latitude_table.interpolate(index * interval)
+  int_longitude = longitude_table.interpolate(index * interval)
+  int_elevation = elevation_table.interpolate(index * interval)
+
+  # every coord in deg
+  deg_old_latitude = old_latitude * Math::PI / 180.000000
+  deg_old_longitude = old_longitude * Math::PI / 180.000000
+  deg_int_latitude = int_latitude * Math::PI / 180.000000
+  deg_int_longitude = int_longitude * Math::PI / 180.000000
+
+  bearing_radians = Math.atan2( Math.cos(deg_old_latitude) * Math.sin(deg_int_latitude) -
+    Math.sin(deg_old_latitude) * Math.cos(deg_int_latitude) * Math.cos(deg_int_longitude-deg_old_longitude),
+      Math.sin(deg_int_longitude-deg_old_longitude) * Math.cos(deg_int_latitude) ) % (2 * Math::PI)
+
+  bearing_degrees = bearing_radians * 180.000000 / Math::PI
+
+  slope = 0
+
+  svurl = "http://maps.googleapis.com/maps/api/streetview?size=640x640&location=#{int_latitude},#{int_longitude}&heading=#{bearing_degrees}&fov=120&pitch=0&sensor=false&key=AIzaSyAEL0_1Syy9c1ycUH5xNNK2QRt3DbZT5g8"
+
+  smooth_track << [index*2, int_latitude, int_longitude, int_elevation, slope, bearing_degrees.floor, svurl]
+
+  old_latitude = int_latitude
+  old_longitude = int_longitude
+
+  putc '.' if index % 500 == 0
 end
 puts "done"
 
@@ -104,19 +134,21 @@ CSV.open(output_csv_file, "wb") do |csv|
 end
 
 # TODO: calculate slope
-# TODO: calculate heading
-# TODO: get streetview image (heading required)
 # http://maps.googleapis.com/maps/api/streetview?size=640x640&location=56.960654,-2.201815&heading=250&fov=120&pitch=0&sensor=false&key=AIzaSyAEL0_1Syy9c1ycUH5xNNK2QRt3DbZT5g8
+
+# tc1=mod(atan2(sin(lon2-lon1)*cos(lat2),cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(lon2-lon1)),2*pi)
+
+# atan2(sin(lon2-lon1)*cos(lat2),cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(lon2-lon1)) / (2*pi)
 
 puts "there you go sir!"
 
-
-
-
-
-
-
-
+# test points
+# 1 46.362093,22.873535
+# 2 48.04871,27.268066
+# 3 44.166445,21.09375
+# 4 48.748945,20.720215
+# 5 50.035974,23.554688
+# 6 44.087585,23.752441
 
 
 
