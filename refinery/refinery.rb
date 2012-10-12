@@ -136,10 +136,22 @@ CSV.open(output_csv_file, "wb") do |csv|
   end
 end
 
-# TODO: calculate slope with more checkpoints
+puts "Downloading SV cache"
+(smooth_track - [["Total distance", "Latitude", "Longitude", "Elevation", "Slope", "Heading", "SVURL"]]).each do |point|
+  key = point[0]
+  url = point[6]
+
+  puts "Key = #{key}"
+  command = "curl '#{url}' > ./tracks/#{selected_track}/svcache/sv-#{key.to_s.rjust(8, '0')}.jpg"
+  system(command)
+end
+puts "done"
 
 puts "there you go sir!"
 
+
+
+# TODO: calculate slope with more checkpoints
 # test points for heading calculation
 # 1 46.362093,22.873535
 # 2 48.04871,27.268066
