@@ -62,37 +62,51 @@ end
 
 # build an array with two columns: Td, Elevation
 puts "prepare elevation and distance"
-elevation_distance = {}
-latitude_longitude = {}
+distance_elevation = {}
+distance_latitude = {}
+distance_longitude = {}
 
 track.map do |point|
-  elevation_distance.merge!(point[4] => point[2])
-  latitude_longitude.merge!(point[0] => point[1])
+  distance_elevation.merge!(point[4] => point[2])
+  distance_latitude.merge!(point[4] => point[0])
+  distance_longitude.merge!(point[4] => point[1])
 end
 
 # interpolate points at a given interval
 require 'interpolator'
-puts "reading data for interpolation"
-elevation_table = Interpolator::Table.new(elevation_distance)
+puts "reading data for interpolations"
+elevation_table = Interpolator::Table.new(distance_elevation)
 elevation_table.style = 5 # 1=linear, 2=lagrange, 3=lagrange3, 4=cubic, 5=spline
 
+latitude_table = Interpolator::Table.new(distance_latitude)
+latitude_table.style = 5 # 1=linear, 2=lagrange, 3=lagrange3, 4=cubic, 5=spline
+
+longitude_table = Interpolator::Table.new(distance_longitude)
+longitude_table.style = 5 # 1=linear, 2=lagrange, 3=lagrange3, 4=cubic, 5=spline
+
 # output the new array (Td, elevation, slope)
-puts "smoothing values"
-output_smooth_elevation = [["Total distance", "Elevation"]]
+puts "smoothing gps track (1 dot = 1km)"
+smooth_track = [["Total distance", "Latitude", "Longitude", "Elevation"]]
 (0..total_distance/2).each do |index|
-  output_smooth_elevation << [index*2, elevation_table.interpolate(index*2)]
-  putc '.' if index%100 == 0
+  smooth_track << [index*2, latitude_table.interpolate(index*2),
+      longitude_table.interpolate(index*2), elevation_table.interpolate(index*2)]
+  putc '.' if index%500 == 0
 end
 puts "done"
 
 # write output csv file
-puts "writing output"
-output_csv_file = "./tracks/#{selected_track}/#{selected_track}_smooth-elevation.csv"
+puts "writing output track"
+output_csv_file = "./tracks/#{selected_track}/#{selected_track}_smooth.csv"
 CSV.open(output_csv_file, "wb") do |csv|
-  output_smooth_elevation.each do |row|
+  smooth_track.each do |row|
     csv << row
   end
 end
+
+# TODO: calculate slope
+# TODO: calculate heading
+# TODO: get streetview image (heading required)
+# http://maps.googleapis.com/maps/api/streetview?size=640x640&location=56.960654,-2.201815&heading=250&fov=120&pitch=0&sensor=false&key=AIzaSyAEL0_1Syy9c1ycUH5xNNK2QRt3DbZT5g8
 
 puts "there you go sir!"
 
