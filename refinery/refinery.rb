@@ -90,15 +90,16 @@ smooth_track = [["Total distance", "Latitude", "Longitude", "Elevation", "Slope"
 old_latitude = 0
 old_longitude = 0
 old_elevation = 0
+window_length = 5
 
 puts "total distance = #{total_distance.floor}m"
 puts "checkpoints = #{total_distance.floor/interval} points"
 puts "smoothing gps track (1 dot = #{500*interval}m)"
 
-(0..total_distance/interval).each do |index|
-  int_latitude = latitude_table.interpolate(index * interval)
-  int_longitude = longitude_table.interpolate(index * interval)
-  int_elevation = elevation_table.interpolate(index * interval)
+(0..total_distance/interval-window_length).each do |index|
+  int_latitude = latitude_table.interpolate(index+window_length * interval)
+  int_longitude = longitude_table.interpolate(index+window_length * interval)
+  int_elevation = elevation_table.interpolate(index+window_length * interval)
 
   # every coord in deg
   deg_old_latitude = old_latitude * Math::PI / 180.000000
@@ -110,14 +111,14 @@ puts "smoothing gps track (1 dot = #{500*interval}m)"
     Math.sin(deg_old_latitude) * Math.cos(deg_int_latitude) * Math.cos(deg_int_longitude-deg_old_longitude),
       Math.sin(deg_int_longitude-deg_old_longitude) * Math.cos(deg_int_latitude) ) % (2 * Math::PI)
 
-  bearing_degrees = bearing_radians * 180.000000 / Math::PI
+  bearing_degrees = bearing_radians * 180.000000 / Math::PI - 90
 
   slope = (int_elevation - old_elevation) / interval
   slope_angle = Math.atan(slope)
 
   svurl = "http://maps.googleapis.com/maps/api/streetview?size=640x640&location=#{int_latitude},#{int_longitude}&heading=#{bearing_degrees}&fov=120&pitch=0&sensor=false&key=AIzaSyAEL0_1Syy9c1ycUH5xNNK2QRt3DbZT5g8"
 
-  smooth_track << [index*2, int_latitude, int_longitude, int_elevation, slope_angle, bearing_degrees.floor, svurl]
+  smooth_track << [index * interval, int_latitude, int_longitude, int_elevation, slope_angle, bearing_degrees.floor, svurl]
 
   old_latitude = int_latitude
   old_longitude = int_longitude
@@ -128,6 +129,9 @@ end
 puts "done"
 
 # write output csv file
+puts "delete old smooth file"
+system("rm ./tracks/#{selected_track}/#{selected_track}_smooth.csv")
+
 puts "writing output track"
 output_csv_file = "./tracks/#{selected_track}/#{selected_track}_smooth.csv"
 CSV.open(output_csv_file, "wb") do |csv|
@@ -137,13 +141,15 @@ CSV.open(output_csv_file, "wb") do |csv|
 end
 
 puts "Downloading SV cache"
-(smooth_track - [["Total distance", "Latitude", "Longitude", "Elevation", "Slope", "Heading", "SVURL"]]).each do |point|
+(smooth_track - [["Total distance", "Latitude", "Longitude", "Elevation", "Slope", "Heading", "SVURL"]]).each_with_index do |point, index|
   key = point[0]
   url = point[6]
 
   puts "Key = #{key}"
   command = "curl '#{url}' > ./tracks/#{selected_track}/svcache/sv-#{key.to_s.rjust(8, '0')}.jpg"
   system(command)
+
+  break if index > 2000
 end
 puts "done"
 
