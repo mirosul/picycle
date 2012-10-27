@@ -10,22 +10,28 @@ def arccos(x)
   Math.atan2(Math.sqrt(1.0 - x*x), x)
 end
 
-# available tracks
-tracks = []
-available_tracks = `ls ./tracks`
-available_tracks.each_line do |track|
-  tracks << track.strip
+def select_track
+  # available tracks
+  tracks = []
+  available_tracks = `ls ./tracks`
+  available_tracks.each_line do |track|
+    tracks << track.strip
+  end
+
+  # user selects a track
+  tracks.each_with_index do |track, index|
+    puts "#{index}. #{track}#{ index == 0 ? ' (default)' : ''}"
+  end
+
+  puts "Enter your destiny: "
+  selected_index = gets
+  selected_index = '0' if selected_index.chomp == ""
+  selected_track = tracks[selected_index.chomp.to_i]
+
+  selected_track
 end
 
-# user selects a track
-tracks.each_with_index do |track, index|
-  puts "#{index}. #{track}#{ index == 0 ? ' (default)' : ''}"
-end
-
-puts "Enter your destiny: "
-selected_index = gets
-selected_index = '0' if selected_index.chomp == ""
-selected_track = tracks[selected_index.chomp.to_i]
+selected_track = select_track
 csv_file = "./tracks/#{selected_track}/#{selected_track}.csv"
 
 # reads an input file from ./tracks
