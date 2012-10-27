@@ -10,12 +10,10 @@ BIND_TO = 'tcp://127.0.0.1:5555'
 
 puts "Starting publisher..."
 ctx = ZMQ::Context.new(1)
-s = ctx.socket(ZMQ::PUB);     # publisher
-s.setsockopt(ZMQ::HWM, 10);   # 10 messages in queue
-s.setsockopt(ZMQ::IDENTITY, "PICYCLE");   # 10 messages in queue
-s.bind(BIND_TO);
+publisher = ctx.socket(ZMQ::PUB);     # publisher
+publisher.setsockopt(ZMQ::HWM, 0);   # 10 messages in queue
+publisher.bind(BIND_TO);
 puts "done."
-
 
 puts ""
 puts "Starting ticks..."
@@ -24,9 +22,9 @@ i = 0
 max_index = INTERVAL.count
 tick_index = 0
 loop do
-  s.send(tick_index.to_s)
+  publisher.send(tick_index.to_s)
 
-  sleep 1.0/10
+  sleep INTERVAL[i]
 
   tick_index = tick_index + 1
   i = i + 1
@@ -34,3 +32,6 @@ loop do
   i = 0 if i == max_index
   puts "(#{tick_index}-#{i}) "
 end
+
+puts "Disconnecting"
+publisher.close
