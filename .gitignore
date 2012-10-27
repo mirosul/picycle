@@ -20,5 +20,5 @@ doc/
 
 *.pro.user
 linux
-refinery/tracks
+arsenal/tracks
 .DS_Store
