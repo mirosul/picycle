@@ -1,1 +1,0 @@
-The output file would be le-mont-hermone.ref
