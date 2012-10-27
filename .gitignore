@@ -21,4 +21,5 @@ doc/
 *.pro.user
 linux
 arsenal/tracks
+qt
 .DS_Store
