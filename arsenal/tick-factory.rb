@@ -5,14 +5,13 @@ require 'zmq'
 INTERVAL = [1.0/3.0, 1.0/3.0, 1.0/3.0, 1.0/3.5, 1.0/3.5, 1.0/3.5, 1.0/3.9, 1.0/3.9, 1.0/3.9, 1.0/4.0,
   1.0/4.0, 1.0/4.0, 1.0/4.0, 1.0/3.8, 1.0/3.8, 1.0/3.8, 1.0/3.8, 1.0/3.3, 1.0/3.3, 1.0/3.3, 1.0/3.3]
 
-BIND_TO = 'tcp://127.0.0.1:5555'
-
+MOVEMENT_QUEUE = 'tcp://127.0.0.1:5555'
 
 puts "Starting publisher..."
 ctx = ZMQ::Context.new(1)
 publisher = ctx.socket(ZMQ::PUB);     # publisher
 publisher.setsockopt(ZMQ::HWM, 0);   # 10 messages in queue
-publisher.bind(BIND_TO);
+publisher.bind(MOVEMENT_QUEUE);
 puts "done."
 
 puts ""
