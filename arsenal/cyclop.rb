@@ -3,7 +3,7 @@
 require 'zmq'
 require 'gtk2'
 
-BIND_TO = 'tcp://127.0.0.1:5555'
+BIND_TO = 'tcp://127.0.0.1:5556'
 TICK_DISTANCE = 559 # mm
 SPEED_TICK_RESOLUTION = 5 # speed measured between last 5 ticks
 
