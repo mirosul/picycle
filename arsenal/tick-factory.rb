@@ -29,7 +29,7 @@ loop do
   i = i + 1
 
   i = 0 if i == max_index
-  puts "(#{tick_index}-#{i}) "
+  putc "."
 end
 
 puts "Disconnecting"
