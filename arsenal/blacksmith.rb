@@ -213,6 +213,11 @@ loop do
       response = selected_track
     end
 
+    if msg == "get_params"
+      response = ("%15.0f" % distance).strip + ";" + ("%8.2f" % current_speed).strip + ";" + ("%8.2f" % average_speed).strip + ";" +
+        image_file + ";" + time_interval.to_s + ";" + selected_track
+    end
+
     if msg == "shutdown"
       control_queue.send("down", ZMQ::NOBLOCK)
       break

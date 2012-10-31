@@ -11,6 +11,7 @@ class Cyclop < Gtk::Window
   @@control_queue
   @@distance_ctl
   @@tracks_ctl
+  @@timer
 
   def initialize
     super
@@ -132,6 +133,15 @@ class Cyclop < Gtk::Window
       destroy_zmq
       Gtk.main_quit
     end
+
+    @@timer = Thread.new do
+      Thread.stop
+      while true do
+        status_click(nil)
+        sleep 1.0/4.0
+      end
+    end
+
   end
 
   def select_track_click(sender)
@@ -142,38 +152,32 @@ class Cyclop < Gtk::Window
   def start_track_click(sender)
     @@control_queue.send("start")
     set_status @@control_queue.recv
+
+    @@timer.run
   end
 
   def stop_track_click(sender)
     @@control_queue.send("stop")
     set_status @@control_queue.recv
+
+    @@timer.kill
   end
 
   def status_click(sender)
+    # for debugging purpose only
     # @@control_queue.send("status")
     # set_status @@control_queue.recv
 
-    @@control_queue.send("get_distance")
-    distance = @@control_queue.recv
-    @@distance_ctl.set_markup("Distance: <b>#{("%12.2f" % (distance.to_i / 1000.0)).strip} m</b>")
+    @@control_queue.send("get_params")
+    params = @@control_queue.recv.split(";")
 
-    @@control_queue.send("get_timer")
-    timer = @@control_queue.recv
-    @@timer_ctl.set_markup("Timer: <b>#{("%12.0f" % timer.to_i).strip} s</b>")
+    @@distance_ctl.set_markup("Distance: <b>#{("%12.2f" % (params[0].to_i / 1000.0)).strip} m</b>")
+    @@timer_ctl.set_markup("Timer: <b>#{("%12.0f" % params[4].to_i).strip} s</b>")
+    @@current_speed_ctl.set_markup("Current speed: <b>#{("%12.2f" % params[1].to_f).strip} km/h</b>")
+    @@average_speed_ctl.set_markup("Average speed: <b>#{("%12.2f" % params[2].to_f).strip} km/h</b>")
+    @@image_ctl.set(params[3])
 
-    @@control_queue.send("get_current_speed")
-    current_speed = @@control_queue.recv
-    @@current_speed_ctl.set_markup("Current speed: <b>#{("%12.2f" % current_speed.to_f).strip} km/h</b>")
-
-    @@control_queue.send("get_average_speed")
-    average_speed = @@control_queue.recv
-    @@average_speed_ctl.set_markup("Average speed: <b>#{("%12.2f" % average_speed.to_f).strip} km/h</b>")
-
-    @@control_queue.send("get_image")
-    image_file = @@control_queue.recv
-    @@image_ctl.set(image_file)
-    @@image_ctl.queue_draw
-    set_status image_file
+    return true
   end
 
 end
