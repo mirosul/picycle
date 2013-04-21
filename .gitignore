@@ -23,3 +23,5 @@ linux
 arsenal/tracks
 qt
 .DS_Store
+
+arsenal/.rvmrc

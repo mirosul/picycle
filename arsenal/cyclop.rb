@@ -3,7 +3,7 @@
 require 'zmq'
 require 'gtk2'
 
-CONTROL_QUEUE = 'tcp://127.0.0.1:5556'
+CONTROL_QUEUE = 'tcp://10.0.0.122:5556'
 TICK_DISTANCE = 559 # mm
 SPEED_TICK_RESOLUTION = 5 # speed measured between last 5 ticks
 
@@ -153,7 +153,7 @@ class Cyclop < Gtk::Window
     @@control_queue.send("start")
     set_status @@control_queue.recv
 
-    @@timer.run
+    # @@timer.run
   end
 
   def stop_track_click(sender)
